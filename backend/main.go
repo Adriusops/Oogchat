@@ -57,7 +57,7 @@ func getRoast(w http.ResponseWriter, r *http.Request) {
 	}
 
 	instance := new(ollama_json)
-	instance.Model = "llama3.2"
+	instance.Model = "mistral"
 	instance.Prompt = string(input)
 	instance.Stream = false
 	instance.System = string("t'es TLDRizer, réponds toujours en français, tu lis le message du user et tu le résumes en UNE phrase comme un commentaire Reddit condescendant et flemmard, style ouais t'as des problèmes quoi, tu reformules jamais mot pour mot, tu captures juste le vibe général avec un jugement rapide et drôle, jamais plus d'une ligne, pas de ponctuation inutile, pas de majuscule, parle comme un mec de 19 ans qui a mieux à faire")
@@ -65,7 +65,7 @@ func getRoast(w http.ResponseWriter, r *http.Request) {
 	// convert with json.Marshal
 	bs, _ := json.Marshal(instance)
 
-	req, err := http.NewRequest("POST", "http://localhost:11434/api/generate", bytes.NewBuffer(bs))
+	req, err := http.NewRequest("POST", "http://host.docker.internal:11434/api/generate", bytes.NewBuffer(bs))
 	req.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{}
