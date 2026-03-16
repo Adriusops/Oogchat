@@ -6,4 +6,6 @@ ollama serve &
 sleep 5
 
 # Run the model
-ollama run --model mistral
+ollama pull mistral
+
+wait
