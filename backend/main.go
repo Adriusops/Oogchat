@@ -19,6 +19,10 @@ type ollama_response struct {
 	Response string `json:"response"`
 }
 
+type request_body struct {
+	Input string `json:"input"`
+}
+
 func main() {
 	router := http.NewServeMux()
 
@@ -51,21 +55,25 @@ func getRoast(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to read request body", http.StatusInternalServerError)
 		return
 	}
-	if input == nil {
+
+	var reqBody request_body
+
+	err = json.Unmarshal(input, &reqBody)
+	if reqBody.Input == "" {
 		http.Error(w, "Failed to call Ollama", http.StatusBadRequest)
 		return
 	}
 
 	instance := new(ollama_json)
 	instance.Model = "mistral"
-	instance.Prompt = string(input)
+	instance.Prompt = string(reqBody.Input)
 	instance.Stream = false
 	instance.System = string("t'es TLDRizer, réponds toujours en français, tu lis le message du user et tu le résumes en UNE phrase comme un commentaire Reddit condescendant et flemmard, style ouais t'as des problèmes quoi, tu reformules jamais mot pour mot, tu captures juste le vibe général avec un jugement rapide et drôle, jamais plus d'une ligne, pas de ponctuation inutile, pas de majuscule, parle comme un mec de 19 ans qui a mieux à faire")
 
 	// convert with json.Marshal
 	bs, _ := json.Marshal(instance)
 
-	req, err := http.NewRequest("POST", "http://host.docker.internal:11434/api/generate", bytes.NewBuffer(bs))
+	req, err := http.NewRequest("POST", "http://ollama:11434/api/generate", bytes.NewBuffer(bs))
 	req.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{}
