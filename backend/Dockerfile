@@ -17,6 +17,6 @@ FROM alpine:latest
 
 WORKDIR /app
 
-COPY --from=builder /app/TLDRizer .
+COPY --from=builder /app/Oogchat .
 
-CMD ["./TLDRizer"]
+CMD ["./Oogchat"]

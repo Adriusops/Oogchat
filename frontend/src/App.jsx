@@ -1,22 +1,52 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import './App.css'
 
 function App() {
   const [input, setInput] = useState('')
-  const [roast, setRoast] = useState('')
+  const [wisdom, setWisdom] = useState('')
+  const [displayedWisdom, setDisplayedWisdom] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [votes, setVotes] = useState(42)
+  const [copied, setCopied] = useState(false)
+
+  const MAX_CHARS = 2000
+
+  // Typewriter effect for wisdom
+  useEffect(() => {
+    if (wisdom && !loading) {
+      let i = 0
+      setDisplayedWisdom('')
+      const interval = setInterval(() => {
+        if (i < wisdom.length) {
+          setDisplayedWisdom(wisdom.substring(0, i + 1))
+          i++
+        } else {
+          clearInterval(interval)
+        }
+      }, 20)
+      return () => clearInterval(interval)
+    }
+  }, [wisdom, loading])
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(wisdom)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch (err) {
+      console.error('Failed to copy:', err)
+    }
+  }
 
   const handleSubmit = async () => {
     if (!input.trim()) {
-      setError('Tu dois au moins écrire quelque chose, champion.')
+      setError('Il faut partager ses pensées pour recevoir la sagesse.')
       return
     }
 
     setLoading(true)
     setError('')
-    setRoast('')
+    setWisdom('')
 
     try {
       const response = await fetch('http://localhost:7070/roast', {
@@ -28,13 +58,13 @@ function App() {
       })
 
       if (!response.ok) {
-        throw new Error('Le serveur a refusé de te roast. Même lui en a marre.')
+        throw new Error('Le chemin vers la sagesse est bloqué. Le sage se repose.')
       }
 
       const text = await response.text()
-      setRoast(text)
+      setWisdom(text)
     } catch (err) {
-      setError(err.message || 'Erreur réseau. Même ton Wi-Fi te lâche.')
+      setError(err.message || 'La connexion à l\'arbre sacré a été rompue.')
     } finally {
       setLoading(false)
     }
@@ -50,124 +80,121 @@ function App() {
   return (
     <div className="app">
       <div className="container">
-        <header>
-          <h1>r/TLDRizer</h1>
-          <p className="subtitle">Balance tes problèmes. L'IA les résume en une vanne.</p>
-        </header>
-
-        <div className="content">
-          {/* Reddit-style post card */}
-          <div className="post-card">
-            <div className="post-header">
-              <span className="subreddit">r/TLDRizer</span>
-              <span>•</span>
-              <span className="post-author">Posté par u/toi_même</span>
-            </div>
-
-            <div className="post-body">
-              <div className="vote-section">
-                <div className="vote-arrow up">▲</div>
-                <div className="vote-count">{votes}</div>
-                <div className="vote-arrow down">▼</div>
-              </div>
-
-              <div className="post-content">
-                <div className="post-title">J'ai besoin de parler de mes problèmes</div>
-                <textarea
-                  className="input-area"
-                  placeholder="Écris tes problèmes ici... L'IA va te roast."
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  disabled={loading}
-                />
-              </div>
-            </div>
-
-            <div className="post-actions">
-              <button
-                className="roast-button"
-                onClick={handleSubmit}
-                disabled={loading || !input.trim()}
-              >
-                {loading ? 'Analyse...' : 'Poster'}
-              </button>
-            </div>
+        <div className="hero-section">
+          <div className="hero-content">
+            <h1 className="hero-title">Partagez votre texte.</h1>
+            <h2 className="hero-subtitle">Recevez la sagesse d'Oogway.</h2>
+            <p className="hero-description">
+              Confiez vos pensées au sage et découvrez la sagesse ancestrale
+              qui se cache derrière chaque mot.
+            </p>
           </div>
 
-          {/* Comment/Response section */}
-          {error && (
-            <div className="comment-card error">
-              <div className="comment-header">
-                <span className="comment-author">u/AutoMod</span>
-                <span className="bot-badge">BOT</span>
-                <span>•</span>
-                <span style={{color: '#818384'}}>à l'instant</span>
-              </div>
-
-              <div className="comment-body">
-                <div className="vote-section">
-                  <div className="vote-arrow up">▲</div>
-                  <div className="vote-count">0</div>
-                  <div className="vote-arrow down">▼</div>
-                </div>
-
-                <div className="comment-content">
-                  <p className="comment-text">{error}</p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {loading && (
-            <div className="comment-card loading">
-              <div className="comment-header">
-                <span className="comment-author">u/TLDRizer_Bot</span>
-                <span className="bot-badge">BOT</span>
-                <span>•</span>
-                <span style={{color: '#818384'}}>en train d'écrire...</span>
-              </div>
-
-              <div className="comment-body">
-                <div className="vote-section">
-                  <div className="vote-arrow up">▲</div>
-                  <div className="vote-count">•</div>
-                  <div className="vote-arrow down">▼</div>
-                </div>
-
-                <div className="comment-content">
-                  <p className="comment-text">L'IA analyse ton pathos...</p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {roast && !loading && (
-            <div className="comment-card">
-              <div className="comment-header">
-                <span className="comment-author">u/TLDRizer_Bot</span>
-                <span className="bot-badge">BOT</span>
-                <span>•</span>
-                <span style={{color: '#818384'}}>à l'instant</span>
-              </div>
-
-              <div className="comment-body">
-                <div className="vote-section">
-                  <div className="vote-arrow up">▲</div>
-                  <div className="vote-count">69</div>
-                  <div className="vote-arrow down">▼</div>
-                </div>
-
-                <div className="comment-content">
-                  <p className="comment-text">{roast}</p>
-                </div>
-              </div>
-            </div>
-          )}
+          <div className="oogway-illustration">
+            <div className="oogway-glow"></div>
+            <img
+              src="/images/kung-fu-panda-master-oogway-character-portrait-op2vy7v01xk24mmm.png"
+              alt="Maître Oogway"
+              className="oogway-image"
+            />
+          </div>
         </div>
 
-        <footer>
-          <p>Ctrl+Enter pour poster • Backend brutal powered by Ollama</p>
+        <div className="input-section">
+          {/* Prompt suggestions */}
+          <div className="prompt-suggestions">
+            <button
+              className="suggestion-chip"
+              onClick={() => setInput("J'ai besoin de conseils pour gérer mon stress quotidien.")}
+              disabled={loading}
+            >
+              💭 Gérer le stress
+            </button>
+            <button
+              className="suggestion-chip"
+              onClick={() => setInput("Comment trouver ma voie et mon but dans la vie ?")}
+              disabled={loading}
+            >
+              🎯 Trouver sa voie
+            </button>
+            <button
+              className="suggestion-chip"
+              onClick={() => setInput("Je me sens perdu, comment retrouver ma motivation ?")}
+              disabled={loading}
+            >
+              ✨ Retrouver la motivation
+            </button>
+          </div>
+
+          <div className="input-card">
+            <textarea
+              className="text-input"
+              placeholder="Commencez à écrire votre texte..."
+              value={input}
+              onChange={(e) => {
+                if (e.target.value.length <= MAX_CHARS) {
+                  setInput(e.target.value)
+                }
+              }}
+              onKeyDown={handleKeyDown}
+              disabled={loading}
+              aria-label="Zone de texte pour la sagesse"
+              maxLength={MAX_CHARS}
+            />
+
+            <button
+              className="submit-button"
+              onClick={handleSubmit}
+              disabled={loading || !input.trim()}
+              aria-label={loading ? 'En attente' : 'Envoyer'}
+            >
+              <span className="submit-icon">→</span>
+            </button>
+          </div>
+
+          {/* Character counter */}
+          <div className="input-meta">
+            <span className={`char-count ${input.length > MAX_CHARS * 0.9 ? 'warning' : ''}`}>
+              {input.length} / {MAX_CHARS}
+            </span>
+          </div>
+        </div>
+
+        {loading && (
+          <div className="wisdom-response loading" role="status" aria-live="polite">
+            <p className="wisdom-text">
+              Le sage contemple vos mots
+              <span className="loading-dots">
+                <span>.</span>
+                <span>.</span>
+                <span>.</span>
+              </span>
+            </p>
+          </div>
+        )}
+
+        {error && !loading && (
+          <div className="wisdom-response error" role="alert">
+            <p className="wisdom-text">{error}</p>
+          </div>
+        )}
+
+        {wisdom && !loading && (
+          <div className="wisdom-response" role="region" aria-label="Sagesse du maître">
+            <button
+              className="copy-button"
+              onClick={handleCopy}
+              aria-label={copied ? 'Copié !' : 'Copier'}
+              title={copied ? 'Copié !' : 'Copier la sagesse'}
+            >
+              {copied ? '✓' : '📋'}
+            </button>
+            <p className="wisdom-text">{displayedWisdom}</p>
+          </div>
+        )}
+
+        <footer className="footer">
+          <p>Ctrl+Entrée pour envoyer</p>
         </footer>
       </div>
     </div>

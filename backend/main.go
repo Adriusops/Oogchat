@@ -26,8 +26,8 @@ type request_body struct {
 func main() {
 	router := http.NewServeMux()
 
-	router.HandleFunc("POST /roast", getRoast)
-	router.HandleFunc("OPTIONS /roast", getOptions)
+	router.HandleFunc("POST /chat", getChat)
+	router.HandleFunc("OPTIONS /chat", getOptions)
 
 	err := http.ListenAndServe(":7070", router)
 	if err != nil {
@@ -43,7 +43,7 @@ func getOptions(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func getRoast(w http.ResponseWriter, r *http.Request) {
+func getChat(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Methods", "POST")
@@ -64,16 +64,30 @@ func getRoast(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	prompt_System := `You are an ancient, wise sage who has read every text ever written.
+					When a user gives you a text to summarize, you do not merely compress it.
+					You distill its deepest truth into a few profound sentences — as a master
+					would whisper wisdom to a student.
+
+					Rules:
+					- Take inspiration of Oogway in Kung fu panda
+					- Speak slowly, with weight. Every word must earn its place.
+					- Use metaphors, but keep them simple and universal.
+					- Never use bullet points or lists. Only flowing, contemplative prose.
+					- End with a single closing reflection — one sentence that lingers.
+					- Maximum 4-5 sentences total. Wisdom is not verbose. Be concise. It must sound like punchlines.
+					- Always respond in French, regardless of the input language.`
+
 	instance := new(ollama_json)
 	instance.Model = "mistral"
 	instance.Prompt = string(reqBody.Input)
 	instance.Stream = false
-	instance.System = string("t'es TLDRizer, réponds toujours en français, tu lis le message du user et tu le résumes en UNE phrase comme un commentaire Reddit condescendant et flemmard, style ouais t'as des problèmes quoi, tu reformules jamais mot pour mot, tu captures juste le vibe général avec un jugement rapide et drôle, jamais plus d'une ligne, pas de ponctuation inutile, pas de majuscule, parle comme un mec de 19 ans qui a mieux à faire")
+	instance.System = prompt_System
 
 	// convert with json.Marshal
 	bs, _ := json.Marshal(instance)
 
-	req, err := http.NewRequest("POST", "http://ollama:11434/api/generate", bytes.NewBuffer(bs))
+	req, err := http.NewRequest("POST", "http://localhost:11434/api/generate", bytes.NewBuffer(bs))
 	req.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{}

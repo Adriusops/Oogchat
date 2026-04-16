@@ -1,2 +1,2 @@
-# TLDRizer
-Simple roast app with AI agent for learn k8s
+# Oogchat
+Simple app with AI agent for learn k8s
